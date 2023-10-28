@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import yaml
 import sklearn.preprocessing as skp
+from skimage import transform
 
 
 def set_seed(seed=1234):
@@ -26,6 +27,17 @@ def normalize(array):
     Resizing is done with sklearn.preprocessing.normalize
     """
     image = skp.normalize(array[:, :, 0])
+    return image
+
+
+def resize(array, size):
+    """Resizes a given array into size shape
+
+    Args:
+        array (numpy.ndarray): Image to be resized
+        size (Tuple): Size of the output image
+    """
+    image = transform.resize(array, size)
     return image
 
 

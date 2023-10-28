@@ -1,0 +1,10 @@
+train:
+  data: Users/abinavr/Desktop/mri_data/train/
+  image_size:
+  batch_size:
+  num_workers:
+  log_path:
+  checkpoint_path:
+  lr:
+  weight_decay:
+  epochs:
