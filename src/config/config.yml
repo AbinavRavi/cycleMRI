@@ -1,10 +1,12 @@
+seed: 42
 train:
   data: Users/abinavr/Desktop/mri_data/train/
-  image_size:
-  batch_size:
-  num_workers:
-  log_path:
-  checkpoint_path:
-  lr:
-  weight_decay:
-  epochs:
+  label: Users/abinavr/Desktop/mri_data/train/
+  image_size: 192
+  batch_size: 16
+  num_workers: 4
+  experiment_name: cyclegan_t2_generator
+  checkpoint_path: ../models/
+  lr: 0.001
+  weight_decay: 1e-5
+  epochs: 10

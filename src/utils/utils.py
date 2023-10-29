@@ -45,3 +45,13 @@ def read_config(file):
     with open(file, "r") as stream:
         cxr_config = yaml.full_load(stream)
     return cxr_config
+
+
+def get_device():
+    if torch.backends.mps.is_available():
+        device = torch.device("mps")
+    elif torch.cuda.is_available():
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
+    return device
