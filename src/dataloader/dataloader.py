@@ -10,7 +10,7 @@ class ImageLoader(Dataset):
     def __init__(self, dataset_path: str, label_path: str, image_size: int) -> None:
         super(ImageLoader, self).__init__()
         self.dataset = glob(f"{dataset_path}/**/**/T1postcontrast/*.dcm")
-        self.labels = glob(f"{label_path}/**/**/T2Space/*.dcm")
+        self.labels = glob(f"{label_path}/**/**/T2SPACE/*.dcm")
         self.image_size: Tuple = (image_size, image_size)
 
     def __len__(self) -> int:

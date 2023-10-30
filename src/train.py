@@ -1,18 +1,21 @@
-# from network.model import Generator, Discriminator
+from network.model import Generator
 from dataloader.dataloader import ImageLoader
+from torch import nn
+from torch.optim import Adam
+import torch
+from utils.utils import read_config, get_device
+import mlflow
+from tqdm import tqdm
+import numpy as np
+import sys
+from os.path import abspath
+from os.path import dirname as d
 
-# from torch import nn
-# from torch.optim import Adam
-# import torch
-from utils.utils import read_config  # , get_device
-
-# import mlflow
-
-# config = read_config("./config/config.yml")
-# seed = config["seed"]
+parent_dir = f"{d(d(abspath(__file__)))}"
+sys.path.append(parent_dir + "/config/")
 
 
-class TrainerCycleGan:
+class GeneratorTrainer:
     def __init__(self, config_path: str) -> None:
         config = read_config(config_path)
         self.lr = config["train"]["lr"]
@@ -28,73 +31,74 @@ class TrainerCycleGan:
         val_label_path = config["val"]["label"]
         self.train_loader = ImageLoader(train_dataset_path, train_label_path, self.image_size)
         self.val_loader = ImageLoader(val_dataset_path, val_label_path, self.image_size)
+        self.device = get_device()
+        self.model = Generator()
+        self.optim = Adam(self.model.parameters(), lr=self.lr, betas=(0.5, 0.999))
+        self.save_path = config["train"]["checkpoint_path"]
 
-    def training_loop(self):
-        pass
+    def _forward(self, data, label, tqdm_loop):
+        data, label = data.to(self.device, dtype=torch.float), label.to(
+            self.device, dtype=torch.long
+        )
+        output = self.model(data)
+        loss = nn.MSELoss(output, label)
+        tqdm_loop.set_postfix({"loss": loss.item()})
+        return loss
 
-    def validation_loop(self):
-        pass
+    def training_loop(self, epoch_num):
+        train_loss = []
+        self.model.train()
+        train_tqdm = tqdm(self.train_loader, desc="train_iter", leave=False)
+        for idx, (data, label) in enumerate(train_tqdm):
+            self.optimizer.zero_grad()
+            loss = self._forward(data, label, train_tqdm)
+            loss.backward()
+            self.optimizer.step()
+            train_loss.append(loss.item())
+            mlflow.log_metric("Itr/Train", loss.item(), epoch_num * len(self.train_loader) + idx)
+        epoch_train_loss = np.array(train_loss).mean()
+        return epoch_train_loss
+
+    def validation_loop(self, epoch_num):
+        val_loss = []
+        self.model.eval()
+        val_tqdm = tqdm(self.val_loader, desc="val_iter", leave=False)
+        with torch.no_grad():
+            for idx, (data, label) in enumerate(val_tqdm):
+                loss_value = self._forward(data, label, val_tqdm)
+                val_loss.append(loss_value.item())
+                mlflow.log_metric(
+                    "Itr/Validation",
+                    loss_value.item(),
+                    epoch_num * len(self.val_loader) + idx,
+                )
+        epoch_val_loss = np.array(val_loss).mean()
+        return epoch_val_loss
 
     def training(self):
-        pass
+        mlflow.set_experiment(self.experiment_name)
+        with mlflow.start_run():
+            for i in range(self.epochs):
+                epoch_train_loss = self.training_loop(i)
+                epoch_val_loss = self.validation_loop(i)
+                mlflow.log_metric("Epoch/trainloss", epoch_train_loss, i)
+                mlflow.log_metric("Epoch/valloss", epoch_val_loss, i)
+                print(
+                    "epoch:{} \t".format(i + 1),
+                    "trainloss:{}".format(epoch_train_loss),
+                    "\t",
+                    "valloss:{}".format(epoch_val_loss),
+                )
+                if (i + 1) % 2 == 0:
+                    torch.save(
+                        self.model,
+                        f"{self.save_path}model_{self.batch_size}_{self.lr}_{i+1}.pt",
+                    )
+        mlflow.end_run()
 
 
-# G_T1c_to_T2 = Generator()
-# G_T2_to_T1c = Generator()
-# D_T1c = Discriminator()
-# D_T2 = Discriminator()
-
-# criterion_GAN = nn.MSELoss()
-# criterion_cycle = nn.L1Loss()
-
-# optimizer_G = Adam(
-#     list(G_T1c_to_T2.parameters()) + list(G_T2_to_T1c.parameters()), lr=0.0002, betas=(0.5, 0.999)
-# )
-# optimizer_D_T1c = Adam(D_T1c.parameters(), lr=0.0002, betas=(0.5, 0.999))
-# optimizer_D_T2 = Adam(D_T2.parameters(), lr=0.0002, betas=(0.5, 0.999))
-
-# for epoch in range(num_epochs):
-#     for batch in dataloader:
-#         real_T1c = batch["T1c_image"].to(get_device())
-#         real_T2 = batch["T2_image"].to(get_device())
-
-#         # Generator updates
-#         optimizer_G.zero_grad()
-
-#         # Forward pass through generators
-#         fake_T2 = G_T1c_to_T2(real_T1c)
-#         recon_T1c = G_T2_to_T1c(fake_T2)
-
-#         # GAN loss
-#         loss_GAN_T2 = criterion_GAN(D_T2(fake_T2), torch.ones_like(D_T2(fake_T2)))
-#         loss_GAN_T1c = criterion_GAN(D_T1c(recon_T1c), torch.ones_like(D_T1c(recon_T1c)))
-
-#         # Cycle loss
-#         loss_cycle_T1c = criterion_cycle(recon_T1c, real_T1c)
-#         loss_cycle_T2 = criterion_cycle(fake_T2, real_T2)
-
-#         # Total generator loss
-#         loss_G = loss_GAN_T2 + loss_GAN_T1c + loss_cycle_T1c + loss_cycle_T2
-#         loss_G.backward()
-#         optimizer_G.step()
-
-#         # Discriminator updates
-#         optimizer_D_T1c.zero_grad()
-#         optimizer_D_T2.zero_grad()
-
-#         loss_D_T1c_real = criterion_GAN(D_T1c(real_T1c), torch.ones_like(D_T1c(real_T1c)))
-#         loss_D_T1c_fake = criterion_GAN(
-#             D_T1c(recon_T1c.detach()), torch.zeros_like(D_T1c(recon_T1c.detach()))
-#         )
-#         loss_D_T2_real = criterion_GAN(D_T2(real_T2), torch.ones_like(D_T2(real_T2)))
-#         loss_D_T2_fake = criterion_GAN(
-#             D_T2(fake_T2.detach()), torch.zeros_like(D_T2(fake_T2.detach()))
-#         )
-
-#         loss_D_T1c = 0.5 * (loss_D_T1c_real + loss_D_T1c_fake)
-#         loss_D_T2 = 0.5 * (loss_D_T2_real + loss_D_T2_fake)
-
-#         loss_D_T1c.backward()
-#         loss_D_T2.backward()
-#         optimizer_D_T1c.step()
-#         optimizer_D_T2.step()
+if __name__ == "__main__":
+    parent_dir = f"{d(d(abspath(__file__)))}"
+    config_file = parent_dir + "/src/config/config.yml"
+    net = GeneratorTrainer(config_file)
+    net.training()

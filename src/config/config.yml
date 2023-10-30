@@ -5,8 +5,12 @@ train:
   image_size: 192
   batch_size: 16
   num_workers: 4
-  experiment_name: cyclegan_t2_generator
-  checkpoint_path: ../models/
+  experiment_name: t1c_t2_generator
+  checkpoint_path: /Users/abinavr/Desktop/cycleMRI/models/
   lr: 0.001
   weight_decay: 1e-5
   epochs: 10
+
+val:
+  data: Users/abinavr/Desktop/mri_data/val/
+  label: Users/abinavr/Desktop/mri_data/val/
