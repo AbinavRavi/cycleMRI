@@ -1,16 +1,16 @@
 seed: 42
 train:
-  data: Users/abinavr/Desktop/mri_data/train/
-  label: Users/abinavr/Desktop/mri_data/train/
+  data: /Users/abinavr/Desktop/mri_data/train/**/**/T1postcontrast
+  label: /Users/abinavr/Desktop/mri_data/train/**/**/T2SPACE
   image_size: 192
-  batch_size: 16
-  num_workers: 4
+  batch_size: 4
+  num_workers: 0
   experiment_name: t1c_t2_generator
   checkpoint_path: /Users/abinavr/Desktop/cycleMRI/models/
   lr: 0.001
   weight_decay: 1e-5
-  epochs: 10
+  epochs: 1
 
 val:
-  data: Users/abinavr/Desktop/mri_data/val/
-  label: Users/abinavr/Desktop/mri_data/val/
+  data: /Users/abinavr/Desktop/mri_data/val/**/**/T1postcontrast
+  label: /Users/abinavr/Desktop/mri_data/val/**/**/T2SPACE
