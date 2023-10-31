@@ -4,6 +4,7 @@ from pydicom import dcmread
 from glob import glob
 import numpy as np
 from typing import Tuple
+import torch
 
 
 class ImageLoader(Dataset):
@@ -17,15 +18,19 @@ class ImageLoader(Dataset):
         return len(self.dataset)
 
     def __getitem__(self, index):
-        pic = dcmread(self.dataset[index]).pixel_array
-        label = dcmread(self.labels[index]).pixel_array
-        resized_pic = resize(pic, self.image_size)
-        resized_label = resize(label, self.image_size)
-        normalized_pic = np.expand_dims(resized_pic, axis=-1)
-        label = np.expand_dims(resized_label, axis=-1)
-        data = to_tensor(normalized_pic)
-        label = to_tensor(label)
-        return data, label
+        try:
+            pic = dcmread(self.dataset[index]).pixel_array
+            label = dcmread(self.labels[index]).pixel_array
+            resized_pic = resize(pic, self.image_size)
+            resized_label = resize(label, self.image_size)
+            normalized_pic = np.expand_dims(resized_pic, axis=-1)
+            label = np.expand_dims(resized_label, axis=-1)
+            data = to_tensor(normalized_pic)
+            label = to_tensor(label)
+            return data, label
+        except Exception:
+            print(f"{self.dataset[index]} is the reason why")
+            return torch.zeros(1, 128, 128), torch.zeros(1, 128, 128)
 
 
 def loader_instance(dataset_path, label_path, image_size, batch_size):

@@ -96,11 +96,11 @@ class GeneratorTrainer:
                     "\t",
                     "valloss:{}".format(epoch_val_loss),
                 )
-                if (i + 1) % 2 == 0:
-                    torch.save(
-                        self.model,
-                        f"{self.save_path}model_{self.batch_size}_{self.lr}_{i+1}.pt",
-                    )
+                # if (i + 1) % 2 == 0:
+                torch.save(
+                    self.model,
+                    f"{self.save_path}generator_{self.batch_size}_{self.lr}_{i+1}.pt",
+                )
         mlflow.end_run()
 
 
