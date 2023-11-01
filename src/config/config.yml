@@ -14,3 +14,9 @@ train:
 val:
   data: /Users/abinavr/Desktop/mri_data/val/**/**/T1postcontrast
   label: /Users/abinavr/Desktop/mri_data/val/**/**/T2SPACE
+
+inference:
+  data: /Users/abinavr/Desktop/mri_data/test/**/**/T1postcontrast
+  label: /Users/abinavr/Desktop/mri_data/test/**/**/T2SPACE
+  image_size: 128
+  model_path: /Users/abinavr/Desktop/cycleMRI/models/generator_4_0.0001_5.pt
