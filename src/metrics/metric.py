@@ -21,7 +21,7 @@ def calculate_ssim(image1, image2):
         image1 (_type_): ground truth image
         image2 (_type_): input image
     """
-    ssim_value, _ = structural_similarity(image1, image2)
+    ssim_value, _ = structural_similarity(image1, image2, multichannel=False)
     return ssim_value
 
 
